@@ -33,15 +33,7 @@ const DEFAULT_MIXTAPES: Mixtape[] = [
   {
     id: "my-mixtape-1",
     name: "Tape_01",
-    tracks: [
-      {
-        id: "default-lofi",
-        title: "Lofi hip hop radio - beats to relax/study to",
-        artist: "Lofi Girl",
-        youtubeUrl: "https://www.youtube.com/watch?v=jfKfPfyJRdk",
-        youtubeId: "jfKfPfyJRdk",
-      },
-    ],
+    tracks: [],
   },
 ];
 
@@ -200,8 +192,8 @@ export default function Home() {
   }, [isPlaying, playingTrackIndex, playingMixtapeName, activePlayingTrack?.youtubeId, isShuffle]);
 
   const handleWheelChange = (_index: number, item: string) => {
-    if (item === "+ Add Mixtape") {
-      setActiveMixtapeName("+ Add Mixtape");
+    if (item === "+ Add tape") {
+      setActiveMixtapeName("+ Add tape");
     } else {
       setActiveMixtapeName(item);
       setCurrentTrackIndex(0);
@@ -285,7 +277,8 @@ export default function Home() {
 
     const updated = [...mixtapes, newTape];
     saveMixtapes(updated);
-    setActiveMixtapeName(newTape.name);
+    // Keep activeMixtapeName on "+ Add tape" so the content view stays stable without jumping
+    setActiveMixtapeName("+ Add tape");
     setNewMixtapeName("");
     setIsMixtapeModalOpen(false);
   };
@@ -332,7 +325,6 @@ export default function Home() {
     setIsEditModalOpen(false);
   };
 
-  // Automatically fetch title & author via noembed when URL changes
   const handleUrlChange = async (url: string) => {
     setNewYoutubeUrl(url);
     const ytId = extractYouTubeId(url);
@@ -399,7 +391,7 @@ export default function Home() {
     }
   };
 
-  const isAddMode = activeMixtapeName === "+ Add Mixtape";
+  const isAddMode = activeMixtapeName === "+ Add tape";
 
   const marqueeText = isPlaying && activePlayingTrack
     ? `NOW PLAYING: ${activePlayingTrack.title.toUpperCase()} — ${activePlayingTrack.artist.toUpperCase()} /// TAPE: ${playingMixtapeName.toUpperCase()} /// `
@@ -555,7 +547,7 @@ export default function Home() {
               isDarkMode ? "border-white/10 text-neutral-400" : "border-neutral-300 text-neutral-500"
             }`}>
               <span className="text-xs uppercase tracking-widest font-mono">
-                {isAddMode ? "ACTION // NEW_MIXTAPE" : "INDEX // TRACK_LIST"}
+                {isAddMode ? "ACTION // NEW_TAPE" : "INDEX // TRACK_LIST"}
               </span>
             </div>
 
@@ -572,7 +564,7 @@ export default function Home() {
                     isDarkMode ? "bg-white text-black hover:bg-neutral-200" : "bg-neutral-900 text-white hover:bg-neutral-800"
                   }`}
                 >
-                  + Click to Create New Mixtape
+                  + Click to Create New Tape
                 </button>
               </div>
             ) : (
@@ -703,12 +695,12 @@ export default function Home() {
             isDarkMode ? "bg-neutral-950 border-white text-white" : "bg-white border-neutral-900 text-neutral-900"
           }`}>
             <h3 className={`text-sm font-bold mb-4 uppercase tracking-widest border-b pb-2 ${isDarkMode ? "border-white/20" : "border-neutral-200"}`}>
-              // CREATE_NEW_MIXTAPE
+              // CREATE_NEW_TAPE
             </h3>
             <form onSubmit={handleCreateMixtape} className="flex flex-col gap-4">
               <div>
                 <label className={`text-[10px] uppercase block mb-1 ${isDarkMode ? "text-neutral-400" : "text-neutral-500"}`}>
-                  Mixtape Name (Max 12 chars)
+                  Tape Name (Max 12 chars)
                 </label>
                 <input
                   type="text"
@@ -728,7 +720,7 @@ export default function Home() {
                   type="button"
                   onClick={() => {
                     setIsMixtapeModalOpen(false);
-                    setActiveMixtapeName("All Mixtapes");
+                    setActiveMixtapeName("+ Add tape");
                   }}
                   className={`px-4 py-2 border text-xs uppercase ${isDarkMode ? "bg-neutral-900 border-white/30 text-neutral-300 hover:bg-neutral-800" : "bg-slate-100 border-neutral-300 text-neutral-700 hover:bg-slate-200"}`}
                 >
@@ -753,12 +745,12 @@ export default function Home() {
             isDarkMode ? "bg-neutral-950 border-white text-white" : "bg-white border-neutral-900 text-neutral-900"
           }`}>
             <h3 className={`text-sm font-bold mb-4 uppercase tracking-widest border-b pb-2 ${isDarkMode ? "border-white/20" : "border-neutral-200"}`}>
-              // EDIT_MIXTAPE
+              // EDIT_TAPE
             </h3>
             <form onSubmit={handleUpdateMixtape} className="flex flex-col gap-4">
               <div>
                 <label className={`text-[10px] uppercase block mb-1 ${isDarkMode ? "text-neutral-400" : "text-neutral-500"}`}>
-                  Mixtape Name (Max 12 chars)
+                  Tape Name (Max 12 chars)
                 </label>
                 <input
                   type="text"
