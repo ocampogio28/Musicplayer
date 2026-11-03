@@ -77,6 +77,8 @@ export default function Home() {
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
   const [newYoutubeUrl, setNewYoutubeUrl] = useState("");
   const [newTrackTitle, setNewTrackTitle] = useState("");
+  const [fetchedArtist, setFetchedArtist] = useState("YouTube");
+  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editMixtapeName, setEditMixtapeName] = useState("");
@@ -330,6 +332,27 @@ export default function Home() {
     setIsEditModalOpen(false);
   };
 
+  // Automatically fetch title & author via noembed when URL changes
+  const handleUrlChange = async (url: string) => {
+    setNewYoutubeUrl(url);
+    const ytId = extractYouTubeId(url);
+    if (ytId && ytId.length === 11) {
+      setIsFetchingMetadata(true);
+      try {
+        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${ytId}`);
+        const data = await res.json();
+        if (data) {
+          if (data.title) setNewTrackTitle(data.title);
+          if (data.author_name) setFetchedArtist(data.author_name);
+        }
+      } catch (err) {
+        console.error("Failed to fetch metadata", err);
+      } finally {
+        setIsFetchingMetadata(false);
+      }
+    }
+  };
+
   const handleAddTrack = (e: React.FormEvent) => {
     e.preventDefault();
     const ytId = extractYouTubeId(newYoutubeUrl);
@@ -343,7 +366,7 @@ export default function Home() {
     const newTrack: Track = {
       id: Date.now().toString(),
       title: titleFinal,
-      artist: "YouTube",
+      artist: fetchedArtist,
       youtubeUrl: newYoutubeUrl,
       youtubeId: ytId,
     };
@@ -358,6 +381,7 @@ export default function Home() {
     saveMixtapes(updated);
     setNewYoutubeUrl("");
     setNewTrackTitle("");
+    setFetchedArtist("YouTube");
     setIsTrackModalOpen(false);
   };
 
@@ -423,9 +447,13 @@ export default function Home() {
 
       {/* Content Container */}
       <div className="flex-1 flex items-center justify-between w-full">
-        {/* Left side Option Wheel - Fully Transparent & Unclipped */}
+        {/* Left side Option Wheel - Fully Transparent & Unclipped with dynamic activeColor */}
         <div className="w-[500px] h-[80vh] flex items-center justify-center relative -ml-8 z-10 overflow-visible [&_*]:bg-transparent">
-          <OptionWheel items={wheelItems} onChange={handleWheelChange} activeColor={isDarkMode ? "#ffffff" : "#0a0a0a"} />
+          <OptionWheel 
+            items={wheelItems} 
+            onChange={handleWheelChange} 
+            activeColor={isDarkMode ? "#ffffff" : "#0a0a0a"} 
+          />
         </div>
 
         {/* Right side: Brutalist Layout */}
@@ -556,7 +584,6 @@ export default function Home() {
                       const isSelected = currentTrack?.id === track.id;
                       const isCurrentlyPlayingThis = isPlaying && playingMixtapeName === activeMixtapeName && activePlayingTrack?.id === track.id;
                       
-                      // High-contrast clean background styles for selected items in both Light & Dark modes
                       let itemStyles = "";
                       if (isSelected) {
                         itemStyles = isDarkMode 
@@ -789,20 +816,6 @@ export default function Home() {
             <form onSubmit={handleAddTrack} className="flex flex-col gap-4">
               <div>
                 <label className={`text-[10px] uppercase block mb-1 ${isDarkMode ? "text-neutral-400" : "text-neutral-500"}`}>
-                  Track Title / Label
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Lofi Study Session"
-                  value={newTrackTitle}
-                  onChange={(e) => setNewTrackTitle(e.target.value)}
-                  className={`w-full border rounded-none px-3 py-2 text-xs focus:outline-none mb-2 ${
-                    isDarkMode ? "bg-neutral-900 border-white/30 text-white focus:border-white" : "bg-slate-50 border-neutral-300 text-neutral-900 focus:border-neutral-900"
-                  }`}
-                />
-
-                <label className={`text-[10px] uppercase block mb-1 ${isDarkMode ? "text-neutral-400" : "text-neutral-500"}`}>
                   YouTube URL
                 </label>
                 <input
@@ -810,7 +823,20 @@ export default function Home() {
                   required
                   placeholder="https://www.youtube.com/watch?v=..."
                   value={newYoutubeUrl}
-                  onChange={(e) => setNewYoutubeUrl(e.target.value)}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  className={`w-full border rounded-none px-3 py-2 text-xs focus:outline-none mb-3 ${
+                    isDarkMode ? "bg-neutral-900 border-white/30 text-white focus:border-white" : "bg-slate-50 border-neutral-300 text-neutral-900 focus:border-neutral-900"
+                  }`}
+                />
+
+                <label className={`text-[10px] uppercase block mb-1 ${isDarkMode ? "text-neutral-400" : "text-neutral-500"}`}>
+                  Track Title / Label {isFetchingMetadata && <span className="text-emerald-400 animate-pulse">[Fetching metadata...]</span>}
+                </label>
+                <input
+                  type="text"
+                  placeholder="Auto-fetched (Optional)"
+                  value={newTrackTitle}
+                  onChange={(e) => setNewTrackTitle(e.target.value)}
                   className={`w-full border rounded-none px-3 py-2 text-xs focus:outline-none ${
                     isDarkMode ? "bg-neutral-900 border-white/30 text-white focus:border-white" : "bg-slate-50 border-neutral-300 text-neutral-900 focus:border-neutral-900"
                   }`}
