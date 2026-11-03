@@ -55,6 +55,7 @@ export default function Home() {
   // Active playback state
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isShuffle, setIsShuffle] = useState<boolean>(false);
+  const [volume, setVolume] = useState<number>(80); // Default volume 80%
   const [playingMixtapeName, setPlayingMixtapeName] = useState<string>("Tape_01");
   const [playingTrackIndex, setPlayingTrackIndex] = useState<number>(0);
   const [shuffledQueueIndices, setShuffledQueueIndices] = useState<number[]>([]);
@@ -162,6 +163,7 @@ export default function Home() {
         if (playerRef.current) {
           try {
             playerRef.current.loadVideoById(activePlayingTrack.youtubeId);
+            playerRef.current.setVolume(volume);
             return;
           } catch (e) {
             // Recreate if instance failed
@@ -176,6 +178,9 @@ export default function Home() {
             controls: 0,
           },
           events: {
+            onReady: (event: any) => {
+              event.target.setVolume(volume);
+            },
             onStateChange: handlePlayerStateChange,
           },
         });
@@ -190,6 +195,14 @@ export default function Home() {
       if (checkInterval) clearTimeout(checkInterval);
     };
   }, [isPlaying, playingTrackIndex, playingMixtapeName, activePlayingTrack?.youtubeId, isShuffle]);
+
+  // Update volume live when slider changes
+  const handleVolumeChange = (newVal: number) => {
+    setVolume(newVal);
+    if (playerRef.current && typeof playerRef.current.setVolume === "function") {
+      playerRef.current.setVolume(newVal);
+    }
+  };
 
   const handleWheelChange = (_index: number, item: string) => {
     if (item === "+ Add tape") {
@@ -277,7 +290,6 @@ export default function Home() {
 
     const updated = [...mixtapes, newTape];
     saveMixtapes(updated);
-    // Keep activeMixtapeName on "+ Add tape" so the content view stays stable without jumping
     setActiveMixtapeName("+ Add tape");
     setNewMixtapeName("");
     setIsMixtapeModalOpen(false);
@@ -485,6 +497,23 @@ export default function Home() {
             >
               {isShuffle ? "[SHUFFLE: ON]" : "[SHUFFLE: OFF]"}
             </button>
+          </div>
+
+          {/* Volume Adjuster Control Box */}
+          <div className={`w-full max-w-md border-2 p-3 mb-3 flex items-center justify-between gap-4 text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] ${
+            isDarkMode ? "bg-neutral-900 border-white/20 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)]" : "bg-white border-neutral-300 text-neutral-900"
+          }`}>
+            <span className="uppercase tracking-widest text-[10px] shrink-0 font-bold">
+              [VOL: {volume}%]
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={(e) => handleVolumeChange(Number(e.target.value))}
+              className="w-full accent-current cursor-pointer"
+            />
           </div>
 
           {/* Minimalist Cassette Card */}
