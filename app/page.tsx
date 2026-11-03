@@ -3,6 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import OptionWheel from "@/components/OptionWheel";
 
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
 export interface Track {
   id: string;
   title: string;
