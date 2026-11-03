@@ -38,6 +38,7 @@ const OptionWheel = ({
   soundUrl = "",
   soundVolume = 0.5,
   className = "",
+  width = "100%", // <-- Added customizable container width
 }) => {
   const rootRef = useRef(null);
   const itemRefs = useRef([]);
@@ -80,9 +81,6 @@ const OptionWheel = ({
     soundVolume,
   };
 
-  // Single rAF loop that eases the wheel position toward its target with
-  // frame-rate independent exponential smoothing, then lays every option out
-  // along the curve based on its distance from the current position.
   const runFrame = useCallback((now) => {
     const dt = Math.min((now - lastRef.current) / 1000, 0.05);
     lastRef.current = now;
@@ -100,8 +98,6 @@ const OptionWheel = ({
     const els = itemRefs.current;
     const n = cfg.count;
     const mirror = cfg.side === "right" ? -1 : 1;
-    // Options sit on a circle whose radius keeps the arc length between two
-    // neighbors equal to one row height, so tilt controls how tightly it curls.
     const tiltRad = (cfg.tilt * Math.PI) / 180;
     const R = tiltRad > 0.0005 ? cfg.rowH / tiltRad : 0;
     for (let i = 0; i < n; i++) {
@@ -143,8 +139,6 @@ const OptionWheel = ({
     rafRef.current = requestAnimationFrame(runFrame);
   }, [runFrame]);
 
-  // Optional tick on selection change, throttled so fast scrolling can't spam
-  // it, and with playback failures (e.g. autoplay policies) silently ignored.
   const playTick = useCallback(() => {
     const { soundUrl, soundVolume } = cfgRef.current;
     if (!soundUrl) return;
@@ -181,7 +175,6 @@ const OptionWheel = ({
     [startLoop, playTick],
   );
 
-  // Wheel / touchpad scrolling, registered manually so it can be non-passive.
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -189,8 +182,6 @@ const OptionWheel = ({
       e.preventDefault();
       const cfg = cfgRef.current;
       const delta = e.deltaMode === 1 ? e.deltaY * 24 : e.deltaY;
-      // Cap each event at one step so notchy mouse wheels move exactly one
-      // option per click, while touchpads still scroll continuously.
       const step = Math.max(-1, Math.min(1, delta / cfg.rowH));
       applyTarget(targetRef.current + step, false);
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
@@ -224,8 +215,6 @@ const OptionWheel = ({
       const dy = e.clientY - drag.y;
       if (!dragMovedRef.current && Math.abs(dy) > 4) {
         dragMovedRef.current = true;
-        // Capture only once a real drag starts, so plain clicks still reach
-        // the items and navigate to them.
         rootRef.current?.setPointerCapture(drag.id);
       }
       if (dragMovedRef.current)
@@ -300,8 +289,10 @@ const OptionWheel = ({
       role="listbox"
       tabIndex={0}
       aria-label="Option wheel"
-      className={`relative h-full w-full select-none overflow-hidden outline-none [touch-action:none] ${isDragging ? "cursor-grabbing" : "cursor-grab"}${className ? ` ${className}` : ""}`}
+      // Changed overflow-hidden to overflow-visible so long option text never cuts off
+      className={`relative h-full select-none overflow-visible outline-none [touch-action:none] ${isDragging ? "cursor-grabbing" : "cursor-grab"}${className ? ` ${className}` : ""}`}
       style={{
+        width: width,
         "--ow-text-color": textColor,
         "--ow-active-color": activeColor,
         "--ow-font-size": `${fontSize}rem`,

@@ -118,7 +118,7 @@ export default function Home() {
     localStorage.setItem("user_theme_mode", nextDark ? "dark" : "light");
   };
 
-  const wheelItems = [...mixtapes.map((m) => m.name), "+ Add Mixtape"];
+  const wheelItems = [...mixtapes.map((m) => m.name), "+ Add tape"];
 
   // Currently viewed mixtape & tracks
   const activeMixtape =
@@ -273,7 +273,7 @@ export default function Home() {
     const trimmedName = newMixtapeName.trim();
     if (!trimmedName) return;
 
-    const finalName = trimmedName.length > 24 ? trimmedName.substring(0, 24) + "..." : trimmedName;
+    const finalName = trimmedName.length > 12 ? trimmedName.substring(0, 12) + "..." : trimmedName;
 
     const newTape: Mixtape = {
       id: Date.now().toString(),
@@ -299,7 +299,7 @@ export default function Home() {
     const trimmedName = editMixtapeName.trim();
     if (!trimmedName) return;
 
-    const finalName = trimmedName.length > 24 ? trimmedName.substring(0, 24) + "..." : trimmedName;
+    const finalName = trimmedName.length > 12 ? trimmedName.substring(0, 12) + "..." : trimmedName;
 
     const updated = mixtapes.map((m) => {
       if (m.id === activeMixtape.id) {
@@ -425,7 +425,7 @@ export default function Home() {
       <div className="flex-1 flex items-center justify-between w-full">
         {/* Left side Option Wheel - Fully Transparent & Unclipped */}
         <div className="w-[500px] h-[80vh] flex items-center justify-center relative -ml-8 z-10 overflow-visible [&_*]:bg-transparent">
-          <OptionWheel items={wheelItems} onChange={handleWheelChange} />
+          <OptionWheel items={wheelItems} onChange={handleWheelChange} activeColor={isDarkMode ? "#ffffff" : "#0a0a0a"} />
         </div>
 
         {/* Right side: Brutalist Layout */}
@@ -681,12 +681,12 @@ export default function Home() {
             <form onSubmit={handleCreateMixtape} className="flex flex-col gap-4">
               <div>
                 <label className={`text-[10px] uppercase block mb-1 ${isDarkMode ? "text-neutral-400" : "text-neutral-500"}`}>
-                  Mixtape Name (Max 24 chars)
+                  Mixtape Name (Max 12 chars)
                 </label>
                 <input
                   type="text"
                   required
-                  maxLength={24}
+                  maxLength={12}
                   placeholder="e.g. tape_02"
                   value={newMixtapeName}
                   onChange={(e) => setNewMixtapeName(e.target.value)}
@@ -731,12 +731,12 @@ export default function Home() {
             <form onSubmit={handleUpdateMixtape} className="flex flex-col gap-4">
               <div>
                 <label className={`text-[10px] uppercase block mb-1 ${isDarkMode ? "text-neutral-400" : "text-neutral-500"}`}>
-                  Mixtape Name (Max 24 chars)
+                  Mixtape Name (Max 12 chars)
                 </label>
                 <input
                   type="text"
                   required
-                  maxLength={24}
+                  maxLength={12}
                   value={editMixtapeName}
                   onChange={(e) => setEditMixtapeName(e.target.value)}
                   className={`w-full border rounded-none px-3 py-2 text-xs focus:outline-none ${
